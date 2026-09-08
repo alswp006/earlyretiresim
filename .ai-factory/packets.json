@@ -1,0 +1,385 @@
+[
+  {
+    "id": "0001",
+    "title": "Types & Constants",
+    "epic": "Epic 1: Data Layer",
+    "task": {
+      "description": "FireInput, ScenarioResult, FireResult, RouteState, RewardGateState, CompareMode 타입과 입력 범위 상수 LIMITS(나이 19~70, 소득/지출 0~1억, 순자산 0~100억), REWARD_AD_TIMEOUT_MS=5000, REWARD_AD_MAX_RETRY=2, MAX_SAVINGS_RATE=90, STORAGE_KEY='ers:lastInput'를 정의한다. 값 없이 타입/상수만 export한다.",
+      "acceptance_criteria": [
+        "FireInput은 age, monthlyIncome, monthlyExpense, netWorth: number와 annualReturnRate: 0.04|0.06|0.08 필드를 갖는다",
+        "ScenarioResult는 savingsRate, monthlySaving, targetAsset, monthsToFire: number|null, retireAge: number|null, series: {year:number;asset:number}[]를 갖는다",
+        "FireResult는 current, boosted, progressPercent, monthsSaved: number|null를 갖고 RouteState는 { input: FireInput }이다",
+        "RewardGateState='adLoading'|'adFailed'|'revealed', CompareMode='both'|'boostedOnly'|'neither'|'capped'로 정의된다",
+        "LIMITS에 age.min=19, age.max=70, money.max=100000000, netWorth.max=10000000000이 포함되고 REWARD_AD_TIMEOUT_MS=5000, REWARD_AD_MAX_RETRY=2, MAX_SAVINGS_RATE=90이 export된다",
+        "tsc --noEmit 통과, React/DOM import 0건"
+      ]
+    },
+    "covers": [
+      "AC-F1-1",
+      "AC-INPUT-2",
+      "AC-REWARD-TIMEOUT"
+    ],
+    "files": [
+      "src/lib/types.ts"
+    ],
+    "definition_of_done": [
+      "tsc --noEmit 통과",
+      "다른 모듈에서 import 가능",
+      "런타임 로직 0건(타입/상수만)"
+    ],
+    "depends_on": [],
+    "db_schema": "none (localStorage only: key 'ers:lastInput' = JSON.stringify(FireInput))",
+    "api_contract": "none (no server)",
+    "dependencies": [],
+    "ui_requirements": "UI 없음 — 타입/상수 전용 모듈"
+  },
+  {
+    "id": "0002",
+    "title": "FIRE 계산 로직",
+    "epic": "Epic 1: Data Layer",
+    "task": {
+      "description": "순수 함수 모듈 작성: calcSavingsRate, calcTargetAsset(월지출×12×25), simulate(월 복리 최대 600개월, 연 단위 series 생성), calcFireResult(current/boosted/progressPercent/monthsSaved), getCompareMode(both/boostedOnly/neither/capped 판정). React/DOM 의존 없음.",
+      "acceptance_criteria": [
+        "calcSavingsRate(3200000,2160000)===32.5 (소수 1자리 반올림)",
+        "calcTargetAsset(2000000)===600000000",
+        "simulate는 월수익률 (1+r)^(1/12)-1로 자산=자산×(1+월수익률)+월저축을 최대 600회 반복하고, 목표 미달성 시 monthsToFire=null, retireAge=null을 반환한다",
+        "월저축≤0 또는 600개월 미달성 입력에서 예외를 던지지 않고 monthsToFire=null을 반환한다",
+        "boosted.savingsRate = min(current.savingsRate+10, 90)이고 boosted.monthlySaving = 월소득×boosted.savingsRate/100이다",
+        "monthsSaved는 current/boosted 둘 다 monthsToFire!==null일 때만 숫자이고 그 외에는 null이며, 어떤 입력에서도 NaN이 되지 않는다",
+        "progressPercent는 netWorth/targetAsset×100을 0~100으로 클램프한 소수 1자리 값이다",
+        "getCompareMode는 현재 저축률≥90이면 'capped', 둘 다 null이면 'neither', current만 null이면 'boostedOnly', 그 외 'both'를 반환한다"
+      ]
+    },
+    "covers": [
+      "AC-F1-3",
+      "AC-F2-1",
+      "AC-F2-2",
+      "AC-F2-3",
+      "AC-F2-4",
+      "AC-F2-6",
+      "AC-F3-2",
+      "AC-F3-3",
+      "AC-F3-6"
+    ],
+    "files": [
+      "src/lib/fire.ts"
+    ],
+    "definition_of_done": [
+      "순수 함수만 export(React/DOM 의존 0)",
+      "경계 케이스(지출≥소득, 600개월 미달성)에서 예외 0건",
+      "tsc --noEmit 통과"
+    ],
+    "depends_on": [
+      "0001"
+    ],
+    "db_schema": "none",
+    "api_contract": "none",
+    "dependencies": [
+      "src/lib/types.ts"
+    ],
+    "ui_requirements": "UI 없음 — 순수 계산 모듈"
+  },
+  {
+    "id": "0003",
+    "title": "검증·공유·저장 유틸",
+    "epic": "Epic 1: Data Layer",
+    "task": {
+      "description": "validation.ts(sanitizeNumeric, validateEmpty, validateInput 필드별 메시지), share.ts(buildShareText, copyToClipboard), storage.ts(safeGet/safeSet/safeRemove) 3개 유틸을 작성한다. 모두 throw하지 않고 실패 시 false/null을 반환하며 console 출력 0건.",
+      "acceptance_criteria": [
+        "sanitizeNumeric('1,2.3-4가🙂')==='1234'이고 sanitizeNumeric('007')==='7', 빈 결과는 ''를 반환한다",
+        "validateEmpty(undefined)==='필수 입력 항목이에요', 값이 있으면 null을 반환한다",
+        "validateInput은 나이 18/71에서 '나이는 19~70세만 입력할 수 있어요'를 반환하고 19/70에서는 null을 반환한다",
+        "소득/지출 100000001, 순자산 10000000001에서 허용 범위 안내 문구를 반환하고 경계값(0, 1억, 100억)에서는 null을 반환한다",
+        "월지출≥월소득이면 expense 필드에 '지출이 소득보다 크거나 같으면 은퇴 시점을 계산할 수 없어요'를 반환한다",
+        "buildShareText는 'EarlyRetireSim | 43세 은퇴 가능 | 저축률 32.5% | 목표 12억 3,000만원' 형식 문자열을 반환하고 monthsToFire=null이면 '은퇴 가능' 자리에 '달성 어려움'을 넣는다",
+        "copyToClipboard는 성공 시 true, 실패 시 throw 없이 false를 반환한다",
+        "safeSet/safeGet은 localStorage 예외·손상 JSON에서 각각 false/null을 반환하고 파싱 실패 시 해당 키를 removeItem한다"
+      ]
+    },
+    "covers": [
+      "AC-INPUT-1",
+      "AC-INPUT-2",
+      "AC-INPUT-EMPTY-HELP",
+      "AC-INPUT-FORMAT",
+      "AC-F1-5",
+      "AC-F3-4",
+      "AC-F3-5",
+      "AC-STORAGE-FAILURE"
+    ],
+    "files": [
+      "src/lib/validation.ts",
+      "src/lib/share.ts",
+      "src/lib/storage.ts"
+    ],
+    "definition_of_done": [
+      "경계값 검증 결과가 명세와 일치",
+      "모든 함수가 throw 없이 실패값 반환",
+      "console.error/log 0건",
+      "tsc --noEmit 통과"
+    ],
+    "depends_on": [
+      "0001"
+    ],
+    "db_schema": "localStorage 'ers:lastInput' = JSON.stringify(FireInput)",
+    "api_contract": "none",
+    "dependencies": [
+      "src/lib/types.ts"
+    ],
+    "ui_requirements": "UI 없음 — 유틸 모듈(문구는 한국어 해요체)"
+  },
+  {
+    "id": "0004",
+    "title": "자산 그래프 & 시나리오 비교 컴포넌트",
+    "epic": "Epic 2: Components",
+    "task": {
+      "description": "AssetChart(series·targetAsset을 받아 viewBox '0 0 320 180' 인라인 SVG 라인 차트 + 목표 점선)와 ScenarioCompare(current/boosted 2카드 flex 배치 + CompareMode별 문구 분기)를 작성한다. 색상은 vars.color 토큰만 사용한다.",
+      "acceptance_criteria": [
+        "AssetChart는 width 100%·height 180px 반응형 SVG를 렌더하고 자산 곡선 path 1개와 목표자산 수평 점선(strokeDasharray) 1개를 그린다",
+        "AssetChart는 series 길이 0 또는 1에서도 크래시 없이 렌더되고 role=\"img\"과 aria-label을 갖는다",
+        "두 파일 모두 HEX 색상 하드코딩 0건(vars.color 토큰 또는 var(--adaptive*)만 사용)",
+        "ScenarioCompare는 카드별 은퇴 나이·필요 기간·월 저축액(formatCurrency)을 표시하고 monthsToFire===null 카드는 '달성 어려움' Chip과 '50년 내 미달성'을 표시한다",
+        "mode='both'면 '저축률 10%p만 올려도 3년 2개월 빨라져요' 문구를, 'boostedOnly'면 '저축률을 10%p 올리면 {retireAge}세에 은퇴할 수 있어요'를 표시한다",
+        "mode='neither'면 차이 문구 DOM이 존재하지 않고 '지출을 줄이거나 소득을 늘리면 목표에 닿을 수 있어요' 1줄만 표시한다",
+        "mode='capped'면 '이미 저축률 상한(90%)에 도달했어요' 1줄만 표시한다",
+        "4개 mode 어디에서도 'NaN'/'undefined' 문자열이 출력되지 않고 TDS 컴포넌트 padding/margin 오버라이드 0건"
+      ]
+    },
+    "covers": [
+      "AC-F2-5",
+      "AC-F3-1",
+      "AC-F3-3",
+      "AC-F3-6",
+      "AC-FORMAT",
+      "AC-A11Y-3"
+    ],
+    "files": [
+      "src/components/AssetChart.tsx",
+      "src/components/ScenarioCompare.tsx"
+    ],
+    "definition_of_done": [
+      "HEX 하드코딩 0건",
+      "4개 CompareMode 렌더 확인",
+      "커스텀 CSS는 flex 배치에만 사용",
+      "tsc --noEmit 통과"
+    ],
+    "depends_on": [
+      "0002"
+    ],
+    "db_schema": "none",
+    "api_contract": "none",
+    "dependencies": [
+      "src/lib/types.ts",
+      "src/lib/fire.ts",
+      "@toss/tds-mobile"
+    ],
+    "ui_requirements": "TDS ListRow/Paragraph.Text/Chip + 인라인 SVG, 간격은 Spacing(size 필수), 색상은 vars.color 토큰만, 카드 2열 flex"
+  },
+  {
+    "id": "0005",
+    "title": "리워드 광고 게이트",
+    "epic": "Epic 2: Components",
+    "task": {
+      "description": "TossRewardAd를 감싸는 RewardGate 상태 머신 컴포넌트. adLoading 진입 시 5초 타이머 시작, 시청 완료→revealed, 에러/타임아웃→adFailed. adFailed에서 안내 문구와 다시 시도(최대 2회)·결과 보기 버튼을 렌더한다.",
+      "acceptance_criteria": [
+        "revealed 상태 이전에는 children이 DOM에 존재하지 않는다",
+        "adLoading 상태에서 TDS Spinner와 '계산 중이에요'가 표시되고, REWARD_AD_TIMEOUT_MS(5000ms) 경과 시 Spinner가 사라지고 adFailed로 전이한다",
+        "시청 완료 시 clearTimeout이 호출되어 폴백 UI가 표시되지 않는다",
+        "adFailed에서 '광고를 불러올 수 없어요. 인터넷 연결을 확인해주세요' 문구와 '다시 시도'·'결과 보기' 버튼 2개가 표시된다",
+        "'다시 시도' 탭 시 adLoading으로 전이하며 타이머를 재시작하고, 2회 소진 후 버튼은 disabled 상태가 된다",
+        "'결과 보기' 탭 시 광고 없이 revealed로 전이해 children이 렌더된다",
+        "언마운트 시 clearTimeout으로 타이머가 정리되어 setState 경고 0건, 광고 실패 경로에서 console.error 0건"
+      ]
+    },
+    "covers": [
+      "AC-REWARD",
+      "AC-REWARD-TIMEOUT",
+      "AC-REWARD-FALLBACK",
+      "AC-LOADING"
+    ],
+    "files": [
+      "src/components/RewardGate.tsx"
+    ],
+    "definition_of_done": [
+      "3개 상태 전이 동작 확인",
+      "타임아웃 후 무한 Spinner 없음",
+      "다시 시도 3번째 탭 불가",
+      "외부 로깅 SDK 호출 0건"
+    ],
+    "depends_on": [
+      "0001"
+    ],
+    "db_schema": "none",
+    "api_contract": "none",
+    "dependencies": [
+      "src/lib/types.ts",
+      "@toss/tds-mobile",
+      "TossRewardAd (템플릿)"
+    ],
+    "ui_requirements": "TDS Spinner/Paragraph.Text/Button(variant=\"fill\"|\"weak\"), 버튼 44px 이상, CTA에 success 햅틱, 간격은 Spacing"
+  },
+  {
+    "id": "0006",
+    "title": "Home 입력 화면",
+    "epic": "Epic 3: Pages",
+    "task": {
+      "description": "TextField 4개(나이·월 실수령액·월 지출·현재 순자산, inputMode=numeric), 수익률 Chip 3개, 저축률 요약 ListRow, Empty State, 계산 버튼을 구성한다. sanitizeNumeric 기반 콤마 포맷, blur 시 빈 필드 help, safeGet/safeSet 복원·저장을 적용한다.",
+      "acceptance_criteria": [
+        "TextField가 나이→월 실수령액→월 지출→현재 순자산 순으로 표시되고 각각 variant와 aria-label을 갖는다",
+        "입력 시 sanitizeNumeric으로 숫자만 남기고 천 단위 콤마로 표시된다(3200000→3,200,000), 소수점·마이너스·한글·이모지는 화면에 남지 않는다",
+        "소득·지출 유효 입력 시 '저축률 32.5% · 월 저축 1,040,000원' 형식이 입력 영역 하단에 표시된다",
+        "수익률 Chip은 4%/6%/8% 중 기본 6%가 선택되고 동시에 1개만 선택되며 탭 시 tickWeak 햅틱이 발생한다",
+        "4개 필드 중 하나라도 비었거나 지출≥소득이면 계산 버튼이 disabled이고, 지출 필드에 hasError와 '지출이 소득보다 크거나 같으면 은퇴 시점을 계산할 수 없어요'가 표시된다",
+        "포커스 아웃된 빈 필드는 hasError와 '필수 입력 항목이에요'를 표시하고 값 입력 시 즉시 제거된다",
+        "저장값이 없으면 '아직 계산 기록이 없어요 · 월 소득과 지출을 입력하면 은퇴 가능 나이를 알려드려요' Empty State를 표시하고, 저장값이 있으면 입력이 복원된다",
+        "계산 버튼 탭 시 safeSet('ers:lastInput')을 시도하고 실패해도 Toast '계산 기록을 저장하지 못했어요' 1회 표시 후 navigate('/result',{state:{input}})는 정상 진행된다",
+        "TextField 포커스 시 scrollIntoView({block:'center'})가 호출된다"
+      ]
+    },
+    "covers": [
+      "AC-F1-1",
+      "AC-F1-2",
+      "AC-F1-3",
+      "AC-F1-4",
+      "AC-F1-5",
+      "AC-F1-6",
+      "AC-INPUT-1",
+      "AC-INPUT-2",
+      "AC-INPUT-EMPTY-HELP",
+      "AC-INPUT-FORMAT",
+      "AC-STORAGE-FAILURE",
+      "AC-EMPTY",
+      "AC-KEYBOARD",
+      "AC-A11Y-1",
+      "AC-A11Y-2"
+    ],
+    "files": [
+      "src/pages/Home.tsx"
+    ],
+    "definition_of_done": [
+      "빈 입력에서 버튼 disabled",
+      "지출≥소득에서 hasError+help 노출",
+      "새로고침 후 이전 입력 복원",
+      "localStorage 차단 환경에서도 계산 플로우 진행",
+      "console.error 0건"
+    ],
+    "depends_on": [
+      "0002",
+      "0003"
+    ],
+    "db_schema": "localStorage 'ers:lastInput'",
+    "api_contract": "none",
+    "dependencies": [
+      "src/lib/types.ts",
+      "src/lib/fire.ts",
+      "src/lib/validation.ts",
+      "src/lib/storage.ts",
+      "@toss/tds-mobile",
+      "react-router-dom"
+    ],
+    "ui_requirements": "TDS Top/TextField(variant 필수)/Chip/ListRow/Button(fill)/Toast, 간격은 Spacing(size 필수), 한국어 해요체, CTA success 햅틱"
+  },
+  {
+    "id": "0007",
+    "title": "Result 결과 화면",
+    "epic": "Epic 3: Pages",
+    "task": {
+      "description": "route state를 받아 calcFireResult 실행, RewardGate로 결과 게이팅 후 히어로 카드·진행률 바·AssetChart·ScenarioCompare·결과 복사·다시 계산 버튼을 렌더한다. state 누락/계산 예외 시 에러 폴백을 표시한다.",
+      "acceptance_criteria": [
+        "광고 시청 전에는 은퇴 나이·그래프·시나리오 텍스트가 DOM에 존재하지 않는다",
+        "계산 중 TDS Spinner와 '계산 중이에요'가 표시되고 완료 시 결과 영역으로 전환된다",
+        "히어로 카드에 '43세 (12년 4개월 후)' 형식 은퇴 나이와 '목표 자산 12억 3,000만원' 형식 목표자산(formatCurrency)이 표시된다",
+        "진행률은 '진행률 4.2%' 텍스트와 0~100% 클램프된 가로 바로 표시된다",
+        "monthsToFire===null이면 은퇴 나이 대신 '현재 조건으로는 50년 내 목표 달성이 어려워요'와 시나리오 카드를 표시하고 크래시하지 않는다",
+        "ScenarioCompare에 getCompareMode 결과를 전달하며 mode='neither'에서 차이 문구가 렌더되지 않는다",
+        "'결과 복사하기' 탭 시 성공하면 Toast '결과를 복사했어요', 실패하면 '복사에 실패했어요. 다시 시도해주세요'를 표시하고 화면 상태는 유지된다",
+        "route state가 없거나 계산 예외 시 '결과를 불러오지 못했어요'와 '다시 입력하기' 버튼(→'/')이 표시된다",
+        "오프라인에서도 5초 후 폴백 UI가 뜨고 '결과 보기'로 결과 열람이 가능하며 흰 화면·무한 Spinner가 없다"
+      ]
+    },
+    "covers": [
+      "AC-REWARD",
+      "AC-REWARD-TIMEOUT",
+      "AC-REWARD-FALLBACK",
+      "AC-LOADING",
+      "AC-ERROR",
+      "AC-F2-1",
+      "AC-F2-3",
+      "AC-F2-4",
+      "AC-F2-6",
+      "AC-F3-4",
+      "AC-F3-5",
+      "AC-F3-6",
+      "AC-NETWORK-RESILIENCE",
+      "AC-FORMAT"
+    ],
+    "files": [
+      "src/pages/Result.tsx"
+    ],
+    "definition_of_done": [
+      "state 없이 /result 직접 진입 시 에러 화면 + 다시 입력하기 동작",
+      "광고 시청 전 결과 DOM 미노출",
+      "오프라인에서 폴백 UI 및 결과 보기 동작",
+      "양쪽 미달성 입력에서 차이 문구 미렌더",
+      "console.error 0건"
+    ],
+    "depends_on": [
+      "0004",
+      "0005"
+    ],
+    "db_schema": "none",
+    "api_contract": "none",
+    "dependencies": [
+      "src/lib/fire.ts",
+      "src/lib/share.ts",
+      "src/components/RewardGate.tsx",
+      "src/components/AssetChart.tsx",
+      "src/components/ScenarioCompare.tsx",
+      "@toss/tds-mobile",
+      "react-router-dom"
+    ],
+    "ui_requirements": "TDS Top(뒤로가기)/ListRow/Paragraph.Text/Button/Toast/Spinner, 금액은 formatCurrency, 색상 토큰만, 하단 고정 버튼에 safe-area-inset-bottom"
+  },
+  {
+    "id": "0008",
+    "title": "배너 광고 & 라우팅 연결",
+    "epic": "Epic 3: Pages",
+    "task": {
+      "description": "Home 하단에 AdSlot 배너를 배치하고(로드 실패 시 영역 미렌더), App.tsx에 '/'와 '/result' Route를 등록하며 unknown path는 '/'로 리다이렉트한다. 전체 플로우를 점검해 마감한다.",
+      "acceptance_criteria": [
+        "App.tsx에 '/'→Home, '/result'→Result Route가 등록되고 '*' 경로는 '/'로 Navigate replace된다",
+        "Home 하단에 AdSlot adGroupId={import.meta.env.VITE_TOSS_AD_GROUP_ID} 배너가 렌더되고, 로드 실패 시 배너 영역이 렌더되지 않아 빈 공간·에러 박스가 노출되지 않는다",
+        "오프라인 상태로 Home 진입 시 흰 화면 없이 입력 UI가 정상 표시된다",
+        "main.tsx는 수정하지 않고 빌드가 성공한다",
+        "전체 플로우(입력→계산→결과→복사) 실행 시 console.error 0건이다",
+        "외부 도메인 링크(<a href=\"http\">, window.open)와 외부 로깅 SDK가 0건이다"
+      ]
+    },
+    "covers": [
+      "AC-REVIEW-1",
+      "AC-REVIEW-2",
+      "AC-REVIEW-3",
+      "AC-NETWORK-RESILIENCE"
+    ],
+    "files": [
+      "src/App.tsx",
+      "src/pages/Home.tsx"
+    ],
+    "definition_of_done": [
+      "빌드 성공",
+      "전체 플로우 console.error 0건",
+      "외부 링크·로깅 SDK 0건",
+      "main.tsx 미수정"
+    ],
+    "depends_on": [
+      "0006",
+      "0007"
+    ],
+    "db_schema": "none",
+    "api_contract": "none",
+    "dependencies": [
+      "react-router-dom",
+      "AdSlot (템플릿)"
+    ],
+    "ui_requirements": "AdSlot은 Home 최하단, 라우팅은 react-router-dom Routes/Route, TDS 스타일 오버라이드 0건"
+  }
+]
