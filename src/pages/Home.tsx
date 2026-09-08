@@ -102,7 +102,10 @@ export default function Home() {
   }
 
   function handleChange(key: FieldKey, raw: string) {
-    setValues((prev) => ({ ...prev, [key]: sanitizeNumeric(raw) }));
+    // 나이는 정수만 의미가 있다 — "1.5"를 sanitizeNumeric에 그대로 넣으면 소수점만 지워져
+    // "15"로 뒤바뀐다(입력값 왜곡, 아무 경고도 없음). 소수점 이하는 버리고 정수부만 취한다.
+    const nextRaw = key === "age" ? raw.split(".")[0] : raw;
+    setValues((prev) => ({ ...prev, [key]: sanitizeNumeric(nextRaw) }));
   }
 
   function handleBlur(key: FieldKey) {
@@ -170,7 +173,8 @@ export default function Home() {
 
       <Paragraph.Text typography="st12">기대 연수익률</Paragraph.Text>
       <Spacing size={8} />
-      <Chip kind="select">
+      {/* 인접 칩 오탭 방지 — 탭 영역 사이 간격을 넓게(large) */}
+      <Chip kind="select" margin="large">
         {RATE_OPTIONS.map((option) => (
           <ChipItem
             key={option.value}

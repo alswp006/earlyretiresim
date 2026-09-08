@@ -21,12 +21,16 @@ function ScenarioCard({
   scenario: ScenarioResult;
   testId: string;
 }) {
-  const { monthsToFire, retireAge, monthlySaving } = scenario;
+  const { monthsToFire, retireAge, monthlySaving, savingsRate } = scenario;
 
   return (
     <Card testId={testId} style={{ flex: 1 }}>
       <Paragraph.Text typography="st5">{title}</Paragraph.Text>
       <Spacing size={8} />
+      <ListRow border="none">
+        <Paragraph.Text typography="st12">저축률</Paragraph.Text>
+        <Paragraph.Text typography="t5">{`${savingsRate}%`}</Paragraph.Text>
+      </ListRow>
       {monthsToFire === null || retireAge === null ? (
         <>
           <Chip kind="action">달성 어려움</Chip>

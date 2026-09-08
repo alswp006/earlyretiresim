@@ -147,6 +147,14 @@ describe("Home 입력 화면", () => {
     expect(screen.queryByText("필수 입력 항목이에요")).not.toBeInTheDocument();
   });
 
+  it("AC-6[P0]: 나이에 소수점 입력 시 뒷자리를 이어붙이지 않고 정수부만 취한다", () => {
+    renderWithRouter(React.createElement(Home));
+
+    const age = screen.getByLabelText("나이");
+    fireEvent.change(age, { target: { value: "1.5" } });
+    expect(age).toHaveValue("1");
+  });
+
   it("AC-7[P0]: 저장값이 없으면 Empty State('아직 계산 기록이 없어요 · ...')를 표시한다", () => {
     renderWithRouter(React.createElement(Home));
 
