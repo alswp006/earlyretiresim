@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { LIMITS, STORAGE_KEY } from "@/lib/types";
+import { sanitizeNumeric, validateEmpty, validateInput, validateUserInput } from "@/lib/validation";
+import { buildShareText, copyToClipboard, generateShareUrl } from "@/lib/share";
+import { safeGet, safeSet, saveScenario, loadScenario } from "@/lib/storage";
+import type { Scenario, UserInput } from "@/lib/contract";
 
 // ═══════════════════════════════════════════════════════════════
 // AC-1: sanitizeNumeric(raw: string): string
@@ -558,50 +562,109 @@ describe("Integration: Full workflow (input → storage → retrieval)", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// HELPER FUNCTION STUBS (to be implemented)
+// AC-9: validateUserInput(input: Partial<UserInput>): { valid, errors }
 // ═══════════════════════════════════════════════════════════════
 
-function sanitizeNumeric(raw: string): string {
-  // AC-1: Remove all non-digits, remove leading zeros
-  // TO BE IMPLEMENTED
-  return "";
+const validUserInput: UserInput = {
+  age: 35,
+  annualExpense: 24000000,
+  currentAssets: 100000000,
+  annualIncome: 60000000,
+  targetAssets: 600000000,
+  annualReturn: 0.06,
+  inflationRate: 0.02,
+};
+
+describe("AC-9: validateUserInput", () => {
+  it("AC-9[P0]: valid input returns valid=true and no errors", () => {
+    const result = validateUserInput(validUserInput);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it("AC-9[P0]: out-of-range age produces an error", () => {
+    const result = validateUserInput({ ...validUserInput, age: 15 });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("나이"))).toBe(true);
+  });
+
+  it("AC-9[P0]: expense >= income produces an error", () => {
+    const result = validateUserInput({ ...validUserInput, annualIncome: 20000000, annualExpense: 24000000 });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("지출이 소득보다"))).toBe(true);
+  });
+
+  it("AC-9: missing required fields each produce an error", () => {
+    const result = validateUserInput({});
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// AC-10: saveScenario / loadScenario
+// ═══════════════════════════════════════════════════════════════
+
+function makeScenario(id: string): Scenario {
+  return {
+    id,
+    name: `시나리오 ${id}`,
+    input: validUserInput,
+    result: {
+      isAchievable: true,
+      yearsToFire: 12,
+      targetAssets: 600000000,
+      finalAssets: 610000000,
+      annualRetirementIncome: 24400000,
+      calculatedAt: new Date().toISOString(),
+    },
+    createdAt: new Date().toISOString(),
+  };
 }
 
-function validateEmpty(value: unknown): string | null {
-  // AC-2: Return error if undefined/null
-  // TO BE IMPLEMENTED
-  return null;
-}
+describe("AC-10: saveScenario & loadScenario", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
 
-function validateInput(
-  field: string,
-  value: any
-): string | null {
-  // AC-3, AC-4, AC-5: Field-specific validation
-  // TO BE IMPLEMENTED
-  return null;
-}
+  it("AC-10[P0]: saves a scenario and resolves its id", async () => {
+    const scenario = makeScenario("s1");
+    const id = await saveScenario(scenario);
+    expect(id).toBe("s1");
+  });
 
-function buildShareText(result: any, input: any): string {
-  // AC-6: Format share text with retire age and savings rate
-  // TO BE IMPLEMENTED
-  return "";
-}
+  it("AC-10[P0]: loads a previously saved scenario by id", async () => {
+    const scenario = makeScenario("s2");
+    await saveScenario(scenario);
+    const loaded = await loadScenario("s2");
+    expect(loaded).toEqual(scenario);
+  });
 
-async function copyToClipboard(text: string): Promise<boolean> {
-  // AC-7: Copy to clipboard, return boolean
-  // TO BE IMPLEMENTED
-  return false;
-}
+  it("AC-10[P0]: returns null for an unknown id", async () => {
+    const loaded = await loadScenario("does-not-exist");
+    expect(loaded).toBeNull();
+  });
 
-function safeSet(key: string, value: unknown): boolean {
-  // AC-8: Save to localStorage safely
-  // TO BE IMPLEMENTED
-  return false;
-}
+  it("AC-10: saving a scenario with the same id overwrites the previous one", async () => {
+    await saveScenario(makeScenario("s3"));
+    const updated = { ...makeScenario("s3"), name: "업데이트됨" };
+    await saveScenario(updated);
+    const loaded = await loadScenario("s3");
+    expect(loaded?.name).toBe("업데이트됨");
+  });
+});
 
-function safeGet<T>(key: string): T | null {
-  // AC-8: Retrieve from localStorage safely
-  // TO BE IMPLEMENTED
-  return null;
-}
+// ═══════════════════════════════════════════════════════════════
+// AC-11: generateShareUrl(scenario): Promise<string>
+// ═══════════════════════════════════════════════════════════════
+
+describe("AC-11: generateShareUrl", () => {
+  it("AC-11[P0]: resolves a URL string containing the encoded scenario id", async () => {
+    const scenario = makeScenario("share-1");
+    const url = await generateShareUrl(scenario);
+    expect(typeof url).toBe("string");
+    expect(url).toContain("scenario=");
+    expect(decodeURIComponent(url.split("scenario=")[1])).toContain("share-1");
+  });
+});
+
