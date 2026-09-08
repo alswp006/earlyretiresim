@@ -290,8 +290,16 @@ export function mockAppsInToss() {
 // ── Toss Reward Ad Component ──
 // TossRewardAd is a project-local component that wraps content behind ad viewing.
 // In tests, render the children directly (ad always "watched").
+// NOTE: uses vi.doMock (not vi.mock) — vi.mock is hoisted to the top of whichever file
+// contains the literal call text, REGARDLESS of enclosing function scope (Vitest hoists by
+// scanning raw source for `vi.mock(`, not by respecting JS scoping). Since this call lives
+// inside a function, a plain `vi.mock` here gets hoisted to the top of *this* mocks.ts file
+// and runs unconditionally the moment anything is imported from mocks.ts — silently
+// clobbering any test file's own deliberate `vi.mock("@/components/TossRewardAd", ...)`
+// override (e.g. packet-0005's RewardGate test, which needs a controllable stub). doMock is
+// intentionally NOT hoisted, so it only takes effect when this function is actually called.
 export function mockTossRewardAd() {
-  vi.mock("@/components/TossRewardAd", () => ({
+  vi.doMock("@/components/TossRewardAd", () => ({
     TossRewardAd: ({ children, onReward }: any) => {
       // Auto-trigger onReward in tests to unlock content
       if (onReward) setTimeout(onReward, 0);
