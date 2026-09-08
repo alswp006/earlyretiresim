@@ -244,7 +244,7 @@ describe("FIRE Calculation Logic (Packet 0002)", () => {
       const monthsSaved = calcMonthsSaved(current, boosted);
       expect(monthsSaved).toBe(40);
       expect(typeof monthsSaved).toBe("number");
-      expect(isNaN(monthsSaved)).toBe(false);
+      expect(isNaN(monthsSaved as any)).toBe(false);
     });
 
     it("AC-6[P0]: should return null monthsSaved when either has null monthsToFire", () => {
@@ -292,7 +292,7 @@ describe("FIRE Calculation Logic (Packet 0002)", () => {
 
       const monthsSaved = calcMonthsSaved(current, boosted);
       expect(monthsSaved).toBe(0);
-      expect(isNaN(monthsSaved)).toBe(false);
+      expect(isNaN(monthsSaved as any)).toBe(false);
 
       // Test both null case
       const current2: ScenarioResult = {
