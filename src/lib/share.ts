@@ -19,9 +19,9 @@ export function buildShareText(
 ): string {
   const { current } = result;
   const status =
-    current.monthsToFire === null
+    current.monthsToFire === null || current.retireAge === null
       ? "달성 어려움"
-      : `${current.retireAge}세 은퇴 가능`;
+      : `${Math.round(current.retireAge)}세 은퇴 가능`;
   const rate = Number(current.savingsRate.toFixed(1));
   const target = formatEok(current.targetAsset);
 
