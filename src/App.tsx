@@ -3,9 +3,14 @@
 //   <Routes>를 감싸는 자리에 끼워라. 라우트 경로는 지우지 말고 고쳐라(화면 파일은 이 경로로 navigate한다).
 // 화면 패킷: 이 파일을 건드리지 마라 — 자기 페이지 파일(자리 페이지)만 통째로 교체한다.
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, type NavigateFunction } from 'react-router-dom';
 import Home from './pages/Home';
 import Result from './pages/Result';
+
+/** Result → Home: 새 계산 시작(입력 화면으로 복귀). */
+export function navigateToHome(navigate: NavigateFunction): void {
+  navigate('/', { replace: true });
+}
 
 // Dev-only TDS Gallery route — `import.meta.env.DEV` is statically replaced
 // (true in dev, false in prod) so the entire import + Route is tree-shaken

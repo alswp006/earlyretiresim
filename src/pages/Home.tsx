@@ -1,11 +1,12 @@
 import { useMemo, useState, type FocusEvent } from "react";
 import { Top, Paragraph, Spacing, ListRow, TextField, Chip, ChipItem, Toast } from "@toss/tds-mobile";
 import { generateHapticFeedback } from "@apps-in-toss/web-framework";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, type NavigateFunction } from "react-router-dom";
 
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { SubmitFooter } from "@/components/BottomCTA";
 import { EmptyState } from "@/components/StateView";
+import { AdSlot } from "@/components/AdSlot";
 import { safeGet, safeSet } from "@/lib/storage";
 import { sanitizeNumeric, validateEmpty, validateInput } from "@/lib/validation";
 import { calcSavingsRate } from "@/lib/fire";
@@ -14,11 +15,13 @@ import { STORAGE_KEY, type FireInput, type RouteState } from "@/lib/types";
 
 type FieldKey = "age" | "monthlyIncome" | "monthlyExpense" | "netWorth";
 
+// TextField placeholder에 항목명을 함께 넣는다 — line variant의 플로팅 라벨은 빈 칸+비포커스에서
+// 숨으므로, 빈 칸만 보이는 첫 화면에서 어느 칸이 소득이고 지출인지 구분돼야 한다.
 const FIELDS: { key: FieldKey; label: string; placeholder: string }[] = [
-  { key: "age", label: "나이", placeholder: "예: 32" },
-  { key: "monthlyIncome", label: "월 실수령액", placeholder: "예: 320만원" },
-  { key: "monthlyExpense", label: "월 지출", placeholder: "예: 216만원" },
-  { key: "netWorth", label: "현재 순자산", placeholder: "예: 5,000만원" },
+  { key: "age", label: "나이", placeholder: "나이 (예: 32)" },
+  { key: "monthlyIncome", label: "월 실수령액", placeholder: "월 실수령액 (예: 3,200,000)" },
+  { key: "monthlyExpense", label: "월 지출", placeholder: "월 지출 (예: 2,160,000)" },
+  { key: "netWorth", label: "현재 순자산", placeholder: "현재 순자산 (예: 50,000,000)" },
 ];
 
 const RATE_OPTIONS: { value: 0.04 | 0.06 | 0.08; label: string }[] = [
@@ -37,6 +40,15 @@ function fireTickHaptic() {
 
 function loadSavedInput(): FireInput | null {
   return safeGet<FireInput>(STORAGE_KEY);
+}
+
+/**
+ * Home → Result: 계산 완료 후 결과 화면으로 이동한다.
+ * Result 화면은 입력값(FireInput)을 받아 화면에서 직접 계산하는 구조라
+ * (packet 0002/0007), 여기서 넘기는 값은 계산 결과가 아니라 계산에 쓰인 입력값이다.
+ */
+export function navigateToResult(navigate: NavigateFunction, input: FireInput): void {
+  navigate("/result", { state: { input } satisfies RouteState });
 }
 
 export default function Home() {
@@ -59,6 +71,9 @@ export default function Home() {
     saved?.annualReturnRate ?? 0.06,
   );
   const [saveFailed, setSaveFailed] = useState(false);
+
+  // 콘솔에서 발급받은 광고 그룹 ID. 미설정이면 배너 자체를 렌더하지 않는다(빈 영역 방지).
+  const adGroupId = import.meta.env.VITE_TOSS_AD_GROUP_ID as string | undefined;
 
   const hasAnyValue = FIELDS.some((f) => values[f.key] !== "");
 
@@ -118,7 +133,7 @@ export default function Home() {
     };
     const ok = safeSet(STORAGE_KEY, input);
     setSaveFailed(!ok);
-    navigate("/result", { state: { input } satisfies RouteState });
+    navigateToResult(navigate, input);
   }
 
   return (
@@ -183,6 +198,12 @@ export default function Home() {
       )}
 
       <Spacing size={12} />
+
+      {/* 하단 배너 — WebView 밖이거나 로드 실패면 AdSlot이 조용히 빈 노드로 남는다(에러 박스·안내 문구 없음). */}
+      {adGroupId ? <AdSlot adGroupId={adGroupId} /> : null}
+
+      {/* 하단 고정 CTA(FixedBottomCTA)에 콘텐츠가 가리지 않도록 확보하는 여백 */}
+      <div style={{ height: "calc(var(--toss-safe-area-bottom, 0px) + 88px)" }} />
 
       <Toast
         open={saveFailed}

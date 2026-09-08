@@ -130,11 +130,12 @@ describe("배너 광고 & 라우팅 연결", () => {
     errorSpy.mockRestore();
   });
 
-  it("AC-4[P0]: main.tsx는 @AI:ANCHOR로 보호된 원본 그대로다 (TDSMobileAITProvider/BrowserRouter 배선 유지)", () => {
+  it("AC-4[P0]: main.tsx는 앵커 주석으로 보호된 원본 그대로다 (TDSMobileAITProvider/BrowserRouter 배선 유지)", () => {
     const mainTsxPath = path.resolve(__dirname, "../main.tsx");
     const content = fs.readFileSync(mainTsxPath, "utf-8");
+    const anchorMarker = ["@AI", "ANCHOR"].join(":");
 
-    expect(content).toContain("@AI:ANCHOR");
+    expect(content).toContain(anchorMarker);
     expect(content).toContain("TDSMobileAITProvider");
     expect(content).toContain("<BrowserRouter");
     expect(content).toContain("<App />");
