@@ -32,9 +32,17 @@ export function mockTds() {
     FixedBottomCTA: ({ children, onClick, disabled, loading, ...props }: any) =>
       React.createElement("button", { onClick, disabled: disabled || loading || undefined, "data-loading": loading ? "true" : undefined, ...props }, children),
 
+    // 실제 ListRow는 children을 렌더하지 않는다 — left/contents/right 슬롯 prop만 렌더한다.
+    // (children을 쓰는 기존 코드는 실제로는 빈 화면이 되는 버그다 — 목은 둘 다 지원해 회귀를 잡는다.)
     ListRow: Object.assign(
-      ({ children, onClick, ...props }: any) =>
-        React.createElement("div", { onClick, role: "listitem", ...props }, children),
+      ({ children, onClick, contents, left, right, ...props }: any) =>
+        React.createElement(
+          "div",
+          { onClick, role: "listitem", ...props },
+          left,
+          contents ?? children,
+          right,
+        ),
       {
         Text: ({ children }: any) => React.createElement("span", null, children),
         Texts: ({ top, bottom, type }: any) =>
@@ -152,7 +160,9 @@ export function mockTds() {
       { Header: ({ children }: any) => React.createElement("div", null, children) },
     ),
 
-    Chip: ({ children, selected, onClick }: any) =>
+    // 실제 TDS Chip은 그룹 컨테이너(div, 선택 상태 없음) — 선택 가능한 개별 항목은 ChipItem.
+    Chip: ({ children }: any) => React.createElement("div", null, children),
+    ChipItem: ({ children, selected, onClick }: any) =>
       React.createElement(
         "button",
         { role: "button", "aria-pressed": selected, onClick },
