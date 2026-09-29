@@ -1,180 +1,137 @@
 🇰🇷 [English](./README.md)
 
-# EarlyRetireSim — FIRE 조기 퇴직 나이 계산기
+# 조기은퇴 계산기 — 2030년대 FIRE 계산기
 
-모바일 중심의 FIRE(경제적 독립, 조기 퇴직) 시뮬레이터로, 4% 규칙을 기반으로 퇴직 나이를 계산합니다. 월 소득, 지출, 현재 자산을 입력하면 조기 퇴직이 가능한 시점을 알 수 있으며, 저축 시나리오를 한눈에 비교해볼 수 있습니다.
+토스 앱을 위한 모바일 우선 조기은퇴(FIRE) 계산기입니다. 나이, 월소득, 지출, 현재 순자산을 입력하면 언제 은퇴할 수 있을지 즉시 확인하고 저축률 시나리오를 비교할 수 있습니다.
 
-2030년대 이상의 전문가를 대상으로 FIRE 트렌드에 관심 있는 사람들을 위해 설계되었습니다. 결과는 몇 초 내에 표시되며, 선택적으로 저축률 10% 증가 시나리오와 비교하여 퇴직까지의 시간 단축 효과를 볼 수 있습니다.
+토스 미니앱 플랫폼(App-in-Toss)용으로 설계되었으며 TDS 네이티브 컴포넌트를 사용하고 재정독립에 관심 있는 사용자를 위해 최적화했습니다. 4% 규칙으로 은퇴 나이를 계산하고, 월 복리 성장을 시뮬레이션하며, 자산 축적 궤적을 시각화합니다.
 
 ## 기능
 
-- 📊 **퇴직 나이 계산기** — 4% 규칙(연간 인출액 = 연간 지출액 × 25배) 기반으로 월 복리 이자를 시뮬레이션
-- 📈 **인터랙티브 자산 성장 그래프** — SVG 기반의 자산 축적 시간대 시각화, 모바일 화면 최적화
-- 💡 **실시간 저축률 표시** — 소득과 지출을 조정할 때 즉시 피드백
-- 🎯 **시나리오 비교** — 현재 저축률과 +10% 저축률 상황의 나란한 비교 및 시간 절감 표시
-- 📋 **결과 공유** — 포맷된 요약을 클립보드로 복사하여 빠르게 공유
-- 💰 **예상 수익률 선택** — 연 4%, 6%, 8% 수익률 중 선택 가능
-- 🎬 **리워드 광고 게이트** — 리워드 광고 시청 후 또는 5초 타임아웃 경과 후 결과 제공
-- 📱 **모바일 네이티브 UX** — 다크 모드, 터치 최적화 입력, 키보드 처리, 안전 영역 지원
-- 📦 **오프라인 우선** — 모든 계산은 로컬에서 실행, 마지막 입력을 localStorage에 저장
-- ⚠️ **탄력적 폴백** — 광고 실패, 네트워크 오류, 용량 초과 오류를 우아하게 처리
+- 📊 **FIRE 입력** — 나이, 월소득, 지출, 순자산, 기대 수익률(4%, 6%, 8%)
+- 🎯 **은퇴 나이 계산** — 최대 50년까지 월 복리 시뮬레이션; 가능성 또는 장애 요인 표시
+- 📈 **자산 성장 시각화** — 연도별 자산 곡선과 목표선(인앱 SVG, 차트 라이브러리 미사용)
+- 🔄 **시나리오 비교** — 현재 대 저축률 +10%p 나란히; 절감 시간 분석
+- 📋 **결과 공유** — 요약 텍스트를 클립보드에 복사하거나 토스 네이티브 앱을 통해 공유
+- 💾 **지속적 입력** — 마지막 계산을 localStorage에 자동 저장해 빠른 재계산
+- 🎬 **리워드 광고 게이팅** — 선택적 광고 시청 후 결과 잠금 해제; 폴백 UI는 차단 없는 UX 보장
 
 ## 기술 스택
 
-- **프레임워크**: React 18 + Vite
-- **UI**: TDS (Toss Design System) 컴포넌트 + Emotion CSS-in-JS
-- **라우팅**: React Router DOM v7
+- **프레임워크**: React 18 + Vite 6
+- **라우팅**: React Router 7
+- **디자인 시스템**: Toss Design System (`@toss/tds-mobile`) + TDS Colors
+- **플랫폼 SDK**: App-in-Toss (`@apps-in-toss/web-framework`)
+- **스타일링**: Emotion (React CSS-in-JS)
+- **아이콘**: Lucide React
 - **언어**: TypeScript 5
-- **테스트**: Vitest + @testing-library/react + Playwright (시각화)
-- **아이콘**: lucide-react
-- **상태 관리**: React hooks + localStorage
-- **배포**: Toss CDN (App-in-Toss 플랫폼)
+- **테스트**: Vitest (단위 테스트), Playwright (시각 테스트)
+- **빌드**: Vite (CSR/SSG, SSR 미사용)
 
 ## 시작하기
 
-### 필수 사항
-
-- Node.js 18 이상
-- npm (Node.js에 포함)
-
-### 설치 및 설정
-
+### 의존성 설치
 ```bash
 npm install
-npm run typecheck  # TypeScript 검증
-npm run test       # 단위 테스트 실행
-npm run test:visual  # 시각화/e2e 테스트 실행 (chromium 필요)
-npx tsc --noEmit   # 제출 전 최종 타입 체크
 ```
 
-### 개발
-
-프로젝트는 Vite를 사용합니다. 이 환경에서는 dev 서버를 검증할 수 없으므로 다음에 의존하세요:
-
+### TypeScript 검증
 ```bash
-npm run build       # 프로덕션 빌드
-npm run test:visual # Playwright 전체 테스트 + 스크린샷 캡처
-npx vitest run      # 단위 테스트
+npx tsc --noEmit
 ```
 
-### 명령어 참조
+### 테스트 실행
+```bash
+npx vitest run          # 단위 테스트
+npm run test:visual     # 시각 회귀 테스트 (Playwright)
+```
 
-| 명령어 | 용도 |
-|---------|---------|
-| `npm run dev` | Vite dev 서버 시작 (로컬 개발용) |
-| `npm run build` | `dist/` 디렉토리로 프로덕션 빌드 |
-| `npm run typecheck` | TypeScript 타입 체크 |
-| `npm run test` | vitest 실행 (단위 테스트) |
-| `npm run test:watch` | vitest를 감시 모드로 실행 |
-| `npm run test:visual` | Playwright 시각화 테스트 + 스크린샷 캡처 |
-| `npm run test:visual:update` | 시각화 테스트 스냅샷 업데이트 |
-| `npm run gate` | 제출 전 품질 게이트 (타입 + 테스트 + 시각화 + 콘솔 오류 없음) |
+### 프로덕션 빌드
+```bash
+npx vite build
+```
+
+`dist/` 디렉토리에 토스 CDN 배포 준비가 완료된 정적 번들을 생성합니다.
+
+### 토스 배포
+```bash
+npx ait build           # 토스 플랫폼용 번들
+npx ait deploy --api-key <YOUR_API_KEY>  # 토스 개발자 콘솔을 통해 배포
+```
+
+([앱인토스 콘솔](https://console.tossmini.com)에 등록 및 유효한 API 키 필요)
 
 ## 환경 변수
 
 | 변수 | 설명 | 필수 |
-|----------|-------------|----------|
-| `VITE_TOSS_AD_SLOT_ID` | Toss 리워드 광고 슬롯 ID (콘솔에서 발급) | 아니오 (폴백 제공) |
+|---|---|---|
+| `VITE_TOSS_AD_GROUP_ID` | 앱인토스 콘솔의 토스 리워드/배너 광고 그룹 ID | 아니오* |
 
-모든 설정은 `apps-in-toss.config.ts`에서 설정됩니다. 앱 이름(`earlyretiresim`)은 Toss 콘솔 등록명과 정확히 일치해야 합니다.
+*생략 시 광고가 단순히 렌더링되지 않음; 앱 기능은 영향 없음
 
 ## 프로젝트 구조
 
 ```
 src/
-├── pages/              # 화면 컴포넌트
-│   ├── Home.tsx        # 입력 화면 (4개 필드 + 수익률 Chip + 광고 배너)
-│   ├── Result.tsx      # 결과 화면 (퇴직 나이 + 그래프 + 비교)
-│   └── __TdsGallery.tsx  # 개발 전용 TDS 컴포넌트 갤러리
-├── components/         # 재사용 가능한 UI 컴포넌트 & SDK 래퍼
-│   ├── ScreenScaffold.tsx      # 페이지 레이아웃 컨테이너 (상단 헤더 + 본문 + 하단 CTA)
-│   ├── PageShell.tsx           # 안전 영역 래퍼
-│   ├── SummaryHero.tsx         # 큰 영웅 숫자 표시 (퇴직 나이)
-│   ├── AssetChart.tsx          # SVG 자산 성장 그래프
-│   ├── ScenarioCompare.tsx     # 비교 카드 레이아웃
-│   ├── RewardGate.tsx          # 광고 리워드 게이트 + 폴백 UI
-│   ├── TossRewardAd.tsx        # 리워드 광고 래퍼 (SDK 가드 + 정리)
-│   ├── AdSlot.tsx              # 배너 광고 래퍼
-│   ├── CountUp.tsx             # 애니메이션 숫자 카운터
-│   ├── StateView.tsx           # 빈 상태/로딩 상태 컴포넌트
-│   └── ...                     # TDS 헬퍼: Card, Amount, BottomCTA 등
-├── lib/                # 유틸리티 & 비즈니스 로직
-│   ├── fire.ts         # FIRE 계산 엔진 (퇴직 나이, 자산 성장)
-│   ├── validation.ts   # 입력 필드 검증 & 오류 메시지
-│   ├── types.ts        # 공유 TypeScript 타입 & RouteState
-│   ├── storage.ts      # localStorage 헬퍼 (getItem/setItem)
-│   ├── share.ts        # Clipboard API 래퍼
-│   ├── utils.ts        # 포맷터 (통화, 숫자, 개월->년)
-│   └── contract.ts     # 앱 상태 타입 계약
-├── __tests__/          # 단위 & 통합 테스트
-└── main.tsx            # 앱 진입점 (TDSMobileAITProvider 사전 설정)
-```
-
-## 주요 구현 세부 사항
-
-### FIRE 계산 엔진 (`src/lib/fire.ts`)
-
-- 월 복리 이자를 시뮬레이션: `월_수익률 = (1 + 연_수익률)^(1/12) - 1`
-- 목표 자산: `월_지출 × 12 × 25` (4% 규칙)
-- 최대 600개월(50년)까지 반복 계산
-- 퇴직 나이 + 그래프용 연도별 전체 자산 반환
-- 엣지 케이스 처리: 음수 저축, 도달 불가능한 목표 (폴백 UI 표시)
-
-### 입력 검증 & 지속성 (`src/lib/validation.ts` + `src/lib/storage.ts`)
-
-- 모든 필드 검증: 나이 19-70세, 소득/지출 0-1억, 자산 0-100억
-- 유효하지 않은 입력은 계산 버튼 활성화 방지
-- 마지막 입력을 `localStorage:ers:lastInput`에 저장 (페이지 새로고침 후에도 유지)
-- 스토리지 실패는 우아하게 처리: 라우트 상태를 통한 계산 진행, 1회 Toast 표시
-
-### 리워드 광고 게이트 (`src/components/RewardGate.tsx`)
-
-- 리워드 광고 로드 및 완료 **또는** 5초 타임아웃 후에만 결과 표시
-- 타임아웃 시 폴백 UI 트리거 (재시도 버튼 + "광고 건너뛰기" 버튼)
-- 최대 2회 재시도 가능, 3번째 실패 시 재시도 버튼 비활성화
-- "광고 건너뛰기" 버튼 항상 사용 가능 — 결과가 영구적으로 잠기지 않음
-
-### 반응형 그래프 (`src/components/AssetChart.tsx`)
-
-- 순수 SVG (차팅 라이브러리 없음) — 인라인으로 번들 감소
-- 모바일 반응성을 위한 `viewBox` 스케일링
-- 테마 색상용 CSS 변수 사용 (다크 모드 자동 적용)
-- 자산 곡선 + 목표선 + 진행률 표시
-
-## 테스트 전략
-
-- **단위 테스트** `src/__tests__/` — 비즈니스 로직 (FIRE 계산, 검증, 스토리지)
-- **컴포넌트 테스트** — React Router, localStorage, TDS 모의 객체와의 통합
-- **시각화 테스트** `e2e/visual-smoke.spec.ts` — Playwright가 모바일 스크린샷 캡처
-- **제출 전 게이트** — `npm run gate`가 타입 → 테스트 → 시각화 → 콘솔 체크 실행
-
-### 테스트 실행
-
-```bash
-npx vitest run              # 단일 실행 (완료 후 종료)
-npx vitest                  # 감시 모드 (파일 변경 시 재실행)
-npm run test:visual         # Playwright 전체 테스트 + 스크린샷 캡처
-npm run test:visual:update  # 시각화 스크린샷 재베이스라인
+├── pages/
+│   ├── Home.tsx           # FIRE 입력 폼(나이, 소득, 지출, 순자산, 수익률 칩)
+│   └── Result.tsx         # 결과: 은퇴 나이, 자산 차트, 시나리오 비교, 공유
+├── components/
+│   ├── ScreenScaffold.tsx # 페이지 SafeArea + 헤더/푸터 레이아웃
+│   ├── SummaryHero.tsx    # 히어로 카드: 주요 숫자(은퇴 나이)
+│   ├── Card.tsx           # 일반 카드 래퍼(결과, 차트)
+│   ├── Amount.tsx         # 형식화된 통화 표시(줄바꿈 없음, 단위폭)
+│   ├── MiniBar.tsx        # 진행률 바(0..1 비율)
+│   ├── AssetChart.tsx     # 인라인 SVG: 자산 성장 곡선 + 목표선
+│   ├── ScenarioCompare.tsx # 나란한 시나리오 카드 + 차이 텍스트
+│   ├── RewardGate.tsx     # 광고 게이트: 광고 시청/타임아웃까지 결과 차단
+│   ├── BottomCTA.tsx      # 고정 푸터 버튼(SubmitFooter, ButtonStack)
+│   ├── StateView.tsx      # 빈 상태 / 로딩 상태
+│   ├── FloatingTabBar.tsx # 하단 탭 네비게이션
+│   ├── AdSlot.tsx         # 배너 광고 래퍼
+│   └── TossRewardAd.tsx   # 리워드 광고 게이트 래퍼
+├── lib/
+│   ├── types.ts           # FireInput, ScenarioResult, RouteState, CompareMode
+│   ├── fire.ts            # 핵심 FIRE 수학: 시뮬레이션, 목표 자산, 시나리오
+│   ├── validation.ts      # 입력 검증(범위, 형식, 비즈니스 규칙)
+│   ├── analytics.ts       # 화면/클릭/노출 로깅(토스 SDK만)
+│   ├── storage.ts         # localStorage 헬퍼(에러 처리 포함)
+│   ├── share.ts           # 공유 및 클립보드 API
+│   ├── review.ts          # 앱 스토어/플레이 스토어 리뷰 프롬프트
+│   ├── utils.ts           # formatCurrency, formatNumber
+│   └── contract.ts        # 데이터 검증 계약
+├── __tests__/
+│   ├── __helpers__/       # 공유 테스트 목 및 유틸리티
+│   └── packet-*.test.ts   # 컴포넌트/함수 테스트
+├── App.tsx                # React Router 설정(라우트: /, /result)
+└── main.tsx               # React 18 루트(TDSMobileAITProvider, BrowserRouter)
 ```
 
 ## 배포
 
-앱은 빌드 파이프라인의 `ait` CLI를 통해 **Toss CDN**(Vercel이나 외부 클라우드 아님)에 배포됩니다.
+### 선행 요구사항
+- [앱인토스 콘솔](https://console.tossmini.com)에 일치하는 앱 ID로 등록됨
+- 유효한 개발자 API 키
+- `apps-in-toss.config.ts`가 올바른 `appName`으로 설정됨(대소문자 민감; 불일치 시 배포 실패)
 
-- **앱 이름**: `earlyretiresim` (Toss 콘솔에 등록; 불일치 시 4031 오류)
-- **런타임**: CSR만 가능 (정적 Vite 빌드 → 브라우저 렌더링)
-- **빌드 결과물**: `dist/` 디렉토리 (파이프라인에서 Toss CDN에 업로드)
+### 워크플로
+1. **로컬 빌드**: `npm run build` → `dist/` 생성
+2. **토스 번들**: `npx ait build` → 플랫폼 준비
+3. **배포**: `npx ait deploy --api-key <KEY>` → 토스 CDN에 업로드
+4. **검수**: 토스 검수팀이 준수 사항 확인(19세 이상, 콘솔 에러 0개, CORS 에러 0개, 외부 링크 없음, TDS 컴포넌트만)
+5. **출시**: 승인 후 토스 앱에 표시됨
 
-### 배포 전 체크리스트
-
-1. ✅ `npx tsc --noEmit` 실행 — 모든 TypeScript 오류 수정
-2. ✅ `npx vitest run` 실행 — 모든 테스트 통과
-3. ✅ `npm run test:visual` 실행 — `e2e/__shots__/*.png` 스크린샷 검토
-4. ✅ `npm run gate` 실행 — 최종 품질 게이트 (타입 + 테스트 + 시각화 + 콘솔 오류 없음)
-5. ✅ 모든 import이 해결되는지, 플레이스홀더 마커(`@ai-factory:placeholder`)가 남지 않았는지 확인
-6. ✅ App.tsx의 라우트가 모든 네비게이션 대상과 일치하는지 확인
-7. ✅ 정상 흐름에서 `console.error` 0개
+### 빌드 출력 제약사항
+- 정적 CSR만(SSR 없음, 동적 라우트 없음)
+- Android 7+, iOS 16+ 호환 웹 API
+- 번들은 100MB 미만이어야 함
+- 외부 폰트 없음(토스 Products Sans는 플랫폼에서 자동 적용)
+- 하드코딩된 HEX 색상 없음(`var(--tds-color-*)` CSS 변수로 다크 모드 지원)
 
 ## 라이선스
 
 MIT
+
+---
+
+**[Claude Code](https://claude.com/claude-code)로 빌드됨** · [토스 플랫폼](https://tossmini.com)용 미니앱
