@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Top, Paragraph, Spacing, Toast, Button } from "@toss/tds-mobile";
+import { Top, Paragraph, Spacing, Toast, Button, Asset } from "@toss/tds-mobile";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { ScreenScaffold } from "@/components/ScreenScaffold";
@@ -94,6 +94,7 @@ export default function Result() {
       >
         <div style={{ minHeight: "60dvh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <EmptyState
+            icon={<Asset.ContentIcon name="icon-warning-circle" alt="" style={{ width: 48, height: 48 }} />}
             title="결과를 불러오지 못했어요"
             description="입력값을 다시 확인해 주세요"
           />

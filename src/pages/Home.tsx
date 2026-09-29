@@ -143,18 +143,19 @@ export default function Home() {
 
   return (
     <ScreenScaffold
+      flush
       top={<Top title={<Top.TitleParagraph>조기은퇴 시뮬레이터</Top.TitleParagraph>} />}
       bottom={<SubmitFooter label="은퇴 나이 계산하기" onClick={handleSubmit} disabled={!isValid} />}
     >
       {!hasAnyValue && (
-        <>
+        <div style={{ padding: "0 24px" }}>
           <Paragraph.Text typography="t4">아직 계산 기록이 없어요</Paragraph.Text>
           <Spacing size={4} />
           <Paragraph.Text typography="t6" color="var(--adaptiveGrey600)">
             월 소득과 지출을 입력하면 은퇴 가능 나이를 알려드려요
           </Paragraph.Text>
           <Spacing size={16} />
-        </>
+        </div>
       )}
 
       {FIELDS.map((field) => (
@@ -174,14 +175,16 @@ export default function Home() {
             hasError={Boolean(fieldError(field.key))}
             help={fieldError(field.key)}
           />
-          <Spacing size={16} />
+          <Spacing size={8} />
         </div>
       ))}
 
-      <Paragraph.Text typography="st10">기대 연수익률</Paragraph.Text>
+      <div style={{ padding: "0 24px" }}>
+        <Paragraph.Text typography="st10">기대 연수익률</Paragraph.Text>
+      </div>
       <Spacing size={8} />
       {/* 인접 칩 오탭 방지 — 탭 영역 사이 간격을 넓게(large) */}
-      <Chip kind="select" margin="large">
+      <Chip kind="select" size="medium" margin="large">
         {RATE_OPTIONS.map((option) => (
           <ChipItem
             key={option.value}

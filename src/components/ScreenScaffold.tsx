@@ -18,15 +18,18 @@ export function ScreenScaffold({
   top,
   children,
   bottom,
+  flush,
 }: {
   top?: ReactNode;
   children: ReactNode;
   bottom?: ReactNode;
+  /** TextField·ListRow·Chip처럼 TDS가 좌우 24px 패딩을 이미 가진 본문용 — 스캐폴드 좌우 패딩을 없애 Top과 같은 24px 축에 맞춘다. */
+  flush?: boolean;
 }) {
   return (
     <PageShell style={top ? { paddingTop: 0 } : undefined}>
       {top}
-      <div style={{ padding: "16px 16px 0" }}>{children}</div>
+      <div style={{ padding: flush ? "16px 0 0" : "16px 16px 0" }}>{children}</div>
       {bottom}
     </PageShell>
   );
