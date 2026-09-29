@@ -33,14 +33,14 @@ export function mockTds() {
       React.createElement("button", { onClick, disabled: disabled || loading || undefined, "data-loading": loading ? "true" : undefined, ...props }, children),
 
     // 실제 ListRow는 children을 렌더하지 않는다 — left/contents/right 슬롯 prop만 렌더한다.
-    // (children을 쓰는 기존 코드는 실제로는 빈 화면이 되는 버그다 — 목은 둘 다 지원해 회귀를 잡는다.)
+    // (children은 목에서도 버린다 — 벤더와 같은 모양이어야 children 버그를 테스트가 잡는다.)
     ListRow: Object.assign(
-      ({ children, onClick, contents, left, right, ...props }: any) =>
+      ({ onClick, contents, left, right, ...props }: any) =>
         React.createElement(
           "div",
           { onClick, role: "listitem", ...props },
           left,
-          contents ?? children,
+          contents,
           right,
         ),
       {

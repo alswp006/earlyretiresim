@@ -1,4 +1,4 @@
-import { Chip, ListRow, Paragraph, Spacing } from "@toss/tds-mobile";
+import { Chip, ChipItem, ListRow, Paragraph, Spacing } from "@toss/tds-mobile";
 
 import type { CompareMode, ScenarioResult } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -10,6 +10,16 @@ function formatDuration(totalMonths: number): string {
   if (years === 0) return `${months}개월`;
   if (months === 0) return `${years}년`;
   return `${years}년 ${months}개월`;
+}
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <ListRow
+      border="none"
+      contents={<Paragraph.Text typography="st12">{label}</Paragraph.Text>}
+      right={<Paragraph.Text typography="t5">{value}</Paragraph.Text>}
+    />
+  );
 }
 
 function ScenarioCard({
@@ -27,30 +37,20 @@ function ScenarioCard({
     <Card testId={testId} style={{ flex: 1 }}>
       <Paragraph.Text typography="st5">{title}</Paragraph.Text>
       <Spacing size={8} />
-      <ListRow border="none">
-        <Paragraph.Text typography="st12">저축률</Paragraph.Text>
-        <Paragraph.Text typography="t5">{`${savingsRate}%`}</Paragraph.Text>
-      </ListRow>
+      <StatRow label="저축률" value={`${savingsRate}%`} />
       {monthsToFire === null || retireAge === null ? (
         <>
-          <Chip kind="action">달성 어려움</Chip>
+          <Chip kind="action">
+            <ChipItem onClick={() => {}}>달성 어려움</ChipItem>
+          </Chip>
           <Spacing size={8} />
           <Paragraph.Text typography="st13">50년 내 미달성</Paragraph.Text>
         </>
       ) : (
         <>
-          <ListRow border="none">
-            <Paragraph.Text typography="st12">은퇴 나이</Paragraph.Text>
-            <Paragraph.Text typography="t5">{`${Math.round(retireAge)}세`}</Paragraph.Text>
-          </ListRow>
-          <ListRow border="none">
-            <Paragraph.Text typography="st12">필요 기간</Paragraph.Text>
-            <Paragraph.Text typography="t5">{formatDuration(monthsToFire)}</Paragraph.Text>
-          </ListRow>
-          <ListRow border="none">
-            <Paragraph.Text typography="st12">월 저축액</Paragraph.Text>
-            <Paragraph.Text typography="t5">{formatCurrency(monthlySaving)}</Paragraph.Text>
-          </ListRow>
+          <StatRow label="은퇴 나이" value={`${Math.round(retireAge)}세`} />
+          <StatRow label="필요 기간" value={formatDuration(monthsToFire)} />
+          <StatRow label="월 저축액" value={formatCurrency(monthlySaving)} />
         </>
       )}
     </Card>
