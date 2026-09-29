@@ -5,7 +5,6 @@ import { useNavigate, type NavigateFunction } from "react-router-dom";
 
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { SubmitFooter } from "@/components/BottomCTA";
-import { EmptyState } from "@/components/StateView";
 import { AdSlot } from "@/components/AdSlot";
 import { logClick } from "@/lib/analytics";
 import { safeGet, safeSet } from "@/lib/storage";
@@ -19,10 +18,10 @@ type FieldKey = "age" | "monthlyIncome" | "monthlyExpense" | "netWorth";
 // TextField placeholder에 항목명을 함께 넣는다 — line variant의 플로팅 라벨은 빈 칸+비포커스에서
 // 숨으므로, 빈 칸만 보이는 첫 화면에서 어느 칸이 소득이고 지출인지 구분돼야 한다.
 const FIELDS: { key: FieldKey; label: string; placeholder: string }[] = [
-  { key: "age", label: "나이", placeholder: "나이 (예: 32)" },
-  { key: "monthlyIncome", label: "월 실수령액", placeholder: "월 실수령액 (예: 3,200,000)" },
-  { key: "monthlyExpense", label: "월 지출", placeholder: "월 지출 (예: 2,160,000)" },
-  { key: "netWorth", label: "현재 순자산", placeholder: "현재 순자산 (예: 50,000,000)" },
+  { key: "age", label: "나이", placeholder: "예: 32" },
+  { key: "monthlyIncome", label: "월 실수령액", placeholder: "예: 3,200,000" },
+  { key: "monthlyExpense", label: "월 지출", placeholder: "예: 2,160,000" },
+  { key: "netWorth", label: "현재 순자산", placeholder: "예: 50,000,000" },
 ];
 
 const RATE_OPTIONS: { value: 0.04 | 0.06 | 0.08; label: string }[] = [
@@ -148,10 +147,14 @@ export default function Home() {
       bottom={<SubmitFooter label="은퇴 나이 계산하기" onClick={handleSubmit} disabled={!isValid} />}
     >
       {!hasAnyValue && (
-        <EmptyState
-          title="아직 계산 기록이 없어요"
-          description="월 소득과 지출을 입력하면 은퇴 가능 나이를 알려드려요"
-        />
+        <>
+          <Paragraph.Text typography="t4">아직 계산 기록이 없어요</Paragraph.Text>
+          <Spacing size={4} />
+          <Paragraph.Text typography="t6" color="var(--adaptiveGrey600)">
+            월 소득과 지출을 입력하면 은퇴 가능 나이를 알려드려요
+          </Paragraph.Text>
+          <Spacing size={16} />
+        </>
       )}
 
       {FIELDS.map((field) => (
@@ -159,6 +162,7 @@ export default function Home() {
           <TextField
             variant="line"
             label={field.label}
+            labelOption="sustain"
             aria-label={field.label}
             placeholder={field.placeholder}
             inputMode="numeric"
@@ -174,7 +178,7 @@ export default function Home() {
         </div>
       ))}
 
-      <Paragraph.Text typography="st12">기대 연수익률</Paragraph.Text>
+      <Paragraph.Text typography="st10">기대 연수익률</Paragraph.Text>
       <Spacing size={8} />
       {/* 인접 칩 오탭 방지 — 탭 영역 사이 간격을 넓게(large) */}
       <Chip kind="select" margin="large">
@@ -210,7 +214,7 @@ export default function Home() {
       {adGroupId ? <AdSlot adGroupId={adGroupId} /> : null}
 
       {/* 하단 고정 CTA(FixedBottomCTA)에 콘텐츠가 가리지 않도록 확보하는 여백 */}
-      <div style={{ height: "calc(var(--toss-safe-area-bottom, 0px) + 88px)" }} />
+      <div style={{ height: "calc(var(--toss-safe-area-bottom, 0px) + 120px)" }} />
 
       <Toast
         open={saveFailed}

@@ -92,10 +92,12 @@ export default function Result() {
         top={<Top title={<Top.TitleParagraph>결과</Top.TitleParagraph>} />}
         bottom={<SubmitFooter label="다시 입력하기" onClick={() => navigate("/")} />}
       >
-        <EmptyState
-          title="결과를 불러오지 못했어요"
-          description="입력값을 다시 확인해 주세요"
-        />
+        <div style={{ minHeight: "60dvh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <EmptyState
+            title="결과를 불러오지 못했어요"
+            description="입력값을 다시 확인해 주세요"
+          />
+        </div>
       </ScreenScaffold>
     );
   }
