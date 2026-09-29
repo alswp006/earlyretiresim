@@ -7,6 +7,7 @@ import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { SubmitFooter } from "@/components/BottomCTA";
 import { EmptyState } from "@/components/StateView";
 import { AdSlot } from "@/components/AdSlot";
+import { logClick } from "@/lib/analytics";
 import { safeGet, safeSet } from "@/lib/storage";
 import { sanitizeNumeric, validateEmpty, validateInput } from "@/lib/validation";
 import { calcSavingsRate } from "@/lib/fire";
@@ -122,11 +123,13 @@ export default function Home() {
 
   function handleSelectRate(rate: 0.04 | 0.06 | 0.08) {
     setAnnualReturnRate(rate);
+    logClick("select_return_rate");
     fireTickHaptic();
   }
 
   function handleSubmit() {
     if (!isValid) return;
+    logClick("calculate_retire_age");
     const input: FireInput = {
       age: Number(values.age),
       monthlyIncome: Number(values.monthlyIncome),

@@ -200,6 +200,7 @@ CRITICAL: Before creating any new function, type, or component, check the list a
 - 0006: Home 입력 화면 (files: src/pages/Home.tsx)
 - 0007: Result 결과 화면 (files: src/pages/Result.tsx)
 - 0008: 배너 광고 & 라우팅 연결 (files: src/App.tsx, src/pages/Home.tsx)
+- imp-20260930-01: [개선] TDS 컴포넌트 2곳을 벤더 모양대로 고치기 (files: src/components/ScenarioCompare.tsx, src/__tests__/__helpers__/mocks.ts)
 
 ## Available exports from existing files
 // src/App.tsx
@@ -239,6 +240,9 @@ export function PageShell({ children, style }: { children: ReactNode; style?: CS
 export function RewardGate({ slotId, children }: RewardGateProps) {
 export function useRewardGate(): {
 
+// src/components/ScenarioCompare.tsx
+export function ScenarioCompare({
+
 // src/components/ScreenScaffold.tsx
 export function ScreenScaffold({
 
@@ -269,7 +273,7 @@ export function logImpression(name: string, extra?: LogFields): void {
 export function useScreenLog(page: string): void {
 
 // src/lib/contract.ts
-export type UserInput = { age: number; annualExpense: number; currentAssets
+ex
 
 ## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
 

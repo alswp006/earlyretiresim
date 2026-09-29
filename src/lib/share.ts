@@ -1,3 +1,4 @@
+import { share } from "@apps-in-toss/web-framework";
 import type { FireInput, ScenarioResult } from "@/lib/types";
 import type { Scenario } from "@/lib/contract";
 
@@ -42,6 +43,19 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     if (!navigator?.clipboard?.writeText) return false;
     await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 네이티브 공유 시트를 연다. 브릿지가 없는 환경(브라우저·jsdom)에서는 SDK가 throw하므로
+ * 여기서 삼키고 성공 여부만 돌려준다 — 호출부는 실패 시 복사 등으로 대체할 수 있다.
+ */
+export async function shareApp({ message }: { message: string }): Promise<boolean> {
+  try {
+    await share({ message });
     return true;
   } catch {
     return false;
